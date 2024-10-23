@@ -3,4 +3,6 @@
 
 (asdf:require-system :slynk)
 
-(slynk:create-server :port 4006 :dont-close t)
+(asdf:load-asd (merge-pathnames "hatis.asd" (uiop:getcwd)))
+
+(slynk:create-server :port 4005 :dont-close t)
