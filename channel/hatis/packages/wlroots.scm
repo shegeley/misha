@@ -1,4 +1,4 @@
- (define-module (packages wlroots)
+ (define-module (hatis packages wlroots)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix download)
