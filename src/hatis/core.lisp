@@ -1,5 +1,7 @@
-(defpackage :hatis.core
-  (:use #:cl #:wayflan-client))
+(defpackage :xyz.hatis.core
+ (:use :wayflan-client :cl))
+
+(in-package #:xyz.hatis.core)
 
 (defun run ()
   ;; Try to connect to a server socket at $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.
@@ -24,3 +26,5 @@
       ;; Listen until all wl-registry events are processed
       (format t "wl-registry globals:~%")
       (wl-display-roundtrip display))))
+
+;; (run)
