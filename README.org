@@ -1,5 +1,14 @@
 This is a very early-stage project (alpha-version) + a set of experiments of building HAckable Text Input System (HATIS)
 
+* ! Moving from Guile Scheme to Common Lisp !
+This project was originated in Guile Scheme using realatively new library guile-wayland. I think it's a great language and the leverage from the Guix ecosystem is awesome too.
+
+But later on I've realised that the library is still pretty raw and buggy in some places. I tried to figure out the internals of it and send fixes, but it was too hard.
+
+Then I've looked on other lisps: Racket and Common Lisp.
+
+And in the last one I've found Wayflan which is just great and well-tested. I have almos 0 knowledge of CL before (only guile scheme & clojure), but hey, how bad can it be? Pretty mature and stable language after all. Old guile attempt can be found at ~guile-dev~ branch.
+
 * Description
 Text-editors are dead as a concept. What's needed is a text-input system. Mobile phones got it right more than 10 years ago. Both Android and iOS can catch the text-input context: «ah here we can input text, let's show the virtual keyboard!».
 
