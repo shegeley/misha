@@ -1,32 +1,35 @@
 # base stubs
 guix-time-machine = guix time-machine -C ./channels-lock.scm
 
-shell-default-args = \
+guile-shell-default-args = \
 	guile-next \
 	guile-ares-rs \
 	-L channel \
 	--no-substitutes #--rebuild-cache
 
-nrepl-exp = "((@ (ares server) run-nrepl-server) \#:port 7888)"
+commonlisp-shell-default-args = \
+	sbcl \
+	sbcl-slynk \
+	-L channel \
+	-D -f guix.scm \
+	--rebuild-cache
 
-# hatis
-guile = ${shell-default-args} -- guile -L ./src
+nrepl-file = "ares.scm"
+
+slynk-file = "repl.lisp"
+
+guile = ${guile-shell-default-args} -- guile -L ./src
+
+commonlisp = ${commonlisp-shell-default-args} -- sbcl --load ${slynk-file}
+
+slynk:
+	guix shell ${commonlisp}
 
 nrepl:
-	guix shell ${guile} -e ${nrepl-exp}
+	guix shell ${guile} -l ${nrepl-file}
 
-repl:
-	guix shell ${guile}
-
-tm/nrepl:
-	${guix-time-machine} -- shell ${guile} -e ${nrepl-exp}
-
-tm/repl:
-	${guix-time-machine} -- shell ${guile}
-
-#build:
-# 	guix build -f guix.scm -L guix
-
+build:
+	guix build -f guix.scm -L channel
 
 sway-nrepl-cmd = "exec foot make nrepl; exec foot"
 sway-tm/nrepl-cmd = "exec foot make tm/nrepl; exec foot"
