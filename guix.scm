@@ -31,6 +31,7 @@
               #:tests? #f ;; looks for hatis/test
               #:asd-systems ''("hatis")))
   (version "0.0.1-alpha")
+  (inputs (list sbcl-alexandria))
   (native-inputs (list sbcl-wayflan))))
 
 hatis

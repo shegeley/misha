@@ -9,5 +9,6 @@
 
  :pathname #P"src/"
  :defsystem-depends-on (#:trivial-features
+                        #:alexandria
                         #:wayflan)
  :components ((:file "hatis/core" :if-feature :linux)))
