@@ -1,30 +1,47 @@
 (defpackage :xyz.hatis.core
- (:use :wayflan-client :cl))
+ (:use
+  :wayflan-client
+  :xyz.shunter.wayflan.client.scanner
+  :xyz.hatis.interfaces.foreign-toplevel-manager
+  :cl)
+ (:local-nicknames (#:a #:alexandria)))
 
 (in-package #:xyz.hatis.core)
 
+(defparameter foreign-toplevel-manager nil)
+(defparameter foreign-toplevel-handle  nil)
+(defparameter registry nil)
+
+(defun handle-toplevel-manager (toplevel-manager)
+ (push (evlambda
+        (t (name &rest args)
+         (format t "toplevel-manager event: ~S ~S~%" name args)))
+  (wl-proxy-hooks toplevel-manager)))
+
+(defun handle-toplevel-handle (toplevel-handle)
+ (push (evlambda
+        (t (name &rest args)
+         (format t "toplevel event: ~S ~S~%" name args)))
+  (wl-proxy-hooks toplevel-handle)))
+
+(defun handle-registry (display)
+ (let ((registry (wl-display.get-registry display)))
+  (push
+   (lambda (event-name &rest event-args)
+    (when (eq event-name :global)
+     (destructuring-bind (name interface version) event-args
+      (when (string= interface "zwlr_foreign_toplevel_manager_v1")
+       (let ((foreign-toplevel-manager
+              (wl-registry.bind
+               registry name
+               'zwlr-foreign-toplevel-manager-v1 version)))
+        (handle-toplevel-manager foreign-toplevel-manager))))))
+   (wl-proxy-hooks registry))
+  (wl-display-roundtrip display)))
+
 (defun run ()
-  ;; Try to connect to a server socket at $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.
-  ;; If $WAYLAND_DISPLAY describes an absolute path, connect to that directly.
-  (with-open-display (display)
-    ;; Create a registry to provide a list of all
-    ;; globals the client can bind to.
-    (let ((registry (wl-display.get-registry display)))
-      ;; Push an event-listening closure to a list that is called
-      ;; whenever the registry receives an event.
-      (push (lambda (event-name &rest event-args)
-              ;; The macro EVCASE dispatches based on the event automatically.
-              ;; See examples/hello-world.lisp
-              (when (eq event-name :global)
-                (destructuring-bind (name interface version) event-args
-                  ;; Print all globals, their interface names, and latest
-                  ;; supported version
-                  (format t "#x~8,'0X ~32S v~D~%"
-                          name interface version))))
-            (wl-proxy-hooks registry))
+ (with-open-display (display)
+  (handle-registry display)
+  (loop (wl-display-dispatch-event display))))
 
-      ;; Listen until all wl-registry events are processed
-      (format t "wl-registry globals:~%")
-      (wl-display-roundtrip display))))
-
-;; (run)
+(run)
