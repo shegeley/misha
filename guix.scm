@@ -1,6 +1,4 @@
 (use-modules
- (hatis packages sbcl-wayflan)
-
  (gnu packages)
  (guix gexp)
  ((guix licenses) #:prefix license:)
