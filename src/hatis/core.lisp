@@ -1,8 +1,11 @@
 (defpackage :xyz.hatis.core
  (:use
   :wayflan-client
-  :xyz.shunter.wayflan.client.scanner
-  :xyz.hatis.interfaces.foreign-toplevel-manager
+
+  :xyz.hatis.protocols.data-control
+  :xyz.hatis.protocols.input-method
+  :xyz.hatis.protocols.foreign-toplevel-management
+
   :cl)
  (:local-nicknames (#:a #:alexandria)))
 
@@ -12,32 +15,37 @@
 (defparameter foreign-toplevel-handle  nil)
 (defparameter registry nil)
 
-(defun handle-toplevel-manager (toplevel-manager)
- (push (evlambda
-        (t (name &rest args)
-         (format t "toplevel-manager event: ~S ~S~%" name args)))
-  (wl-proxy-hooks toplevel-manager)))
-
 (defun handle-toplevel-handle (toplevel-handle)
- (push (evlambda
-        (t (name &rest args)
-         (format t "toplevel event: ~S ~S~%" name args)))
+ (push (lambda (event)
+        (destructuring-bind (name &rest args) event
+         (finish-output nil)
+         (format t "Proxy received event ~S with args ~S~%" event args)
+         (finish-output nil)))
   (wl-proxy-hooks toplevel-handle)))
 
+(defun handle-toplevel-manager (display toplevel-manager)
+ (push (lambda (event)
+        (destructuring-bind (name &rest args) event
+         (finish-output nil)
+         (format t "Proxy received event ~S with args ~S~%" event args)
+         (finish-output nil)
+         (setf foreign-toplevel-handle (first args))
+         (handle-toplevel-handle foreign-toplevel-handle)))
+  (wl-proxy-hooks toplevel-manager)))
+
+
 (defun handle-registry (display)
- (let ((registry (wl-display.get-registry display)))
-  (push
-   (lambda (event-name &rest event-args)
-    (when (eq event-name :global)
-     (destructuring-bind (name interface version) event-args
-      (when (string= interface "zwlr_foreign_toplevel_manager_v1")
-       (let ((foreign-toplevel-manager
-              (wl-registry.bind
-               registry name
-               'zwlr-foreign-toplevel-manager-v1 version)))
-        (handle-toplevel-manager foreign-toplevel-manager))))))
-   (wl-proxy-hooks registry))
-  (wl-display-roundtrip display)))
+ (setf registry (wl-display.get-registry display))
+ (push
+  (lambda (event)
+   (destructuring-bind (name &optional id interface version) event
+    (when (string= interface "zwlr_foreign_toplevel_manager_v1")
+     (setf foreign-toplevel-manager
+      (wl-registry.bind registry id 'zwlr-foreign-toplevel-manager-v1 version))
+     (handle-toplevel-manager display foreign-toplevel-manager))))
+  (wl-proxy-hooks registry))
+ (wl-display-roundtrip display)
+ (wl-display-roundtrip display))
 
 (defun run ()
  (with-open-display (display)
