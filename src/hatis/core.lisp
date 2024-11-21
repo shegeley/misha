@@ -7,7 +7,7 @@
   :xyz.hatis.protocols.foreign-toplevel-management
 
   :cl)
- (:local-nicknames (#:a #:alexandria)))
+ (:local-nicknames (:a :alexandria)))
 
 (in-package #:xyz.hatis.core)
 
@@ -33,7 +33,6 @@
          (handle-toplevel-handle foreign-toplevel-handle)))
   (wl-proxy-hooks toplevel-manager)))
 
-
 (defun handle-registry (display)
  (setf registry (wl-display.get-registry display))
  (push
@@ -52,4 +51,4 @@
   (handle-registry display)
   (loop (wl-display-dispatch-event display))))
 
-(run)
+;; (run)

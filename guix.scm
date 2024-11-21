@@ -7,13 +7,29 @@
  (guix utils)
  (guix build-system asdf)
 
+ (hatis packages wlroots)
+
  (gnu packages freedesktop)
  (gnu packages pkg-config)
  (gnu packages xdisorg)
  (gnu packages lisp-check)
  (gnu packages lisp-xyz))
 
-(define %source-dir (dirname (current-filename)))
+(define %protocols
+ (local-file
+  (dirname (current-filename))
+  "hatis-protocols"
+  #:recursive? #t
+  #:select? (lambda (file _) (not (string-contains file "/src/")))))
+
+(define %source
+ (local-file
+  (dirname (current-filename))
+  "hatis"
+  #:recursive? #t
+  #:select? (lambda (file _) (and
+                         (not (string-contains file "protocols.asd"))
+                         (not (string-contains file "/protocols/"))))))
 
 (define sbcl-wayflan/latest
  (let [(commit "f56f6ec42b05100ef7353a831b9f9ad505824c95")
@@ -28,6 +44,33 @@
            (commit commit)))
      (sha256 (base32 hash)))))))
 
+(define protocols/phases
+ #~(modify-phases %standard-phases
+    (add-after 'unpack 'fix-paths
+     (lambda* (#:key inputs #:allow-other-keys)
+      (substitute* (find-files "protocols")
+       (("\"(.*?.xml)\"" all m)
+        (let* ((rel-path (string-append "/share/wayland-protocols/" m))
+               (abs-path (search-input-file inputs rel-path)))
+         (string-append "#P\"" abs-path "\""))))))))
+
+(define-public hatis/protocols
+ (package
+  (name "hatis-protocols")
+  (home-page "https://github.com/shegeley/hatis")
+  (description "Wayflan-Spiced Wayland Protocols Needed For Hatis")
+  (synopsis "")
+  (license license:gpl3+)
+  (source %protocols)
+  (build-system asdf-build-system/sbcl)
+  (arguments
+   (list
+    #:tests? #f ;; looks for hatis/protocols/test
+    #:phases protocols/phases
+    #:asd-systems ''("protocols")))
+  (version "0.0.1")
+  (native-inputs (list sbcl-wayflan/latest wlroots* wayland-protocols))))
+
 (define-public hatis
  (package
   (name "hatis")
@@ -35,14 +78,14 @@
   (description "This is a very early-stage project (alpha-version) + a set of experiments of building HAckable Text Input System (HATIS)")
   (synopsis "")
   (license license:gpl3+)
-  (source (local-file %source-dir "text-input-system-checkout"
-           #:recursive? #t))
+  (source %source)
   (build-system asdf-build-system/sbcl)
-  (arguments (list
-              #:tests? #f ;; looks for hatis/test
-              #:asd-systems ''("hatis")))
+  (arguments
+   (list
+    #:tests? #f ;; looks for hatis/test
+    #:asd-systems ''("hatis")))
   (version "0.0.1-alpha")
   (inputs (list sbcl-alexandria))
-  (native-inputs (list sbcl-wayflan/latest))))
+  (native-inputs (list sbcl-wayflan/latest hatis/protocols))))
 
 hatis

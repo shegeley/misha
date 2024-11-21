@@ -33,13 +33,9 @@
      (copy-recursively "protocol" target-dir #:copy-file xml-copy)
      #t)))
 
-(define-public wlroots/latest
+(define-public wlroots*
  (package
   (inherit wlroots)
-  (native-search-paths
-   (list (search-path-specification
-          (variable "GUILE_WAYLAND_PROTOCOL_PATH")
-          (files (list "share/wayland-protocols")))))
   (arguments
    (list #:phases
     #~(modify-phases %standard-phases
@@ -54,5 +50,3 @@
            (string-append (assoc-ref (or native-inputs inputs) "hwdata")
             "/share/hwdata/pnp.ids"))) #t))
        (add-before 'configure 'expose-protocols #$expose-protocols))))))
-
-wlroots/latest
