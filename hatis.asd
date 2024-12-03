@@ -12,6 +12,9 @@
  :defsystem-depends-on (:trivial-features
                         :alexandria
                         :wayflan
+                        :trivia
+                        :arrows
+                        :access
                         :protocols)
 
  :components ((:file "hatis/core")))

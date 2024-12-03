@@ -6,6 +6,9 @@
   :xyz.hatis.protocols.input-method
   :xyz.hatis.protocols.foreign-toplevel-management
 
+  :access
+  :arrows
+  :trivia
   :cl)
  (:local-nicknames (:a :alexandria)))
 
