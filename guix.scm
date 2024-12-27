@@ -9,6 +9,8 @@
 
  (hatis packages wlroots)
 
+ ((gnu packages glib) #:select (glib gobject-introspection))
+ ((gnu packages gtk) #:select (gtk))
  (gnu packages freedesktop)
  (gnu packages pkg-config)
  (gnu packages xdisorg)
@@ -20,16 +22,26 @@
   (dirname (current-filename))
   "hatis-protocols"
   #:recursive? #t
-  #:select? (lambda (file _) (not (string-contains file "/src/")))))
+  ;; guix will auto-compile all the .lisp file and pull all the .asd files into knows systems automatically on build with asdf-build-system
+  ;; unrelated files must be removed from the source of the desired packages to avoid collisions
+  #:select?
+  (lambda (file _)
+   (and
+    (not (string-contains file "hatis.asd"))
+    (not (string-contains file "repl.lisp"))
+    (not (string-contains file "/src/"))))))
 
 (define %source
  (local-file
   (dirname (current-filename))
   "hatis"
   #:recursive? #t
-  #:select? (lambda (file _) (and
-                         (not (string-contains file "protocols.asd"))
-                         (not (string-contains file "/protocols/"))))))
+  #:select?
+  (lambda (file _)
+   (and
+    (not (string-contains file "repl.lisp"))
+    (not (string-contains file "protocols.asd"))
+    (not (string-contains file "/protocols/"))))))
 
 (define sbcl-wayflan/latest
  (let [(commit "f56f6ec42b05100ef7353a831b9f9ad505824c95")
@@ -95,5 +107,19 @@
    (list
     sbcl-wayflan/latest
     hatis/protocols))))
+
+(define-public hatis.ui
+ (package
+  (inherit hatis)
+  (name "hatis-ui")
+  (arguments (list #:tests? #f #:asd-systems ''("hatis.ui")))
+  (inputs
+   (append (package-inputs hatis)
+    (list
+     gobject-introspection
+     sbcl-cl-gtk4
+     sbcl-cl-glib
+     gtk
+     glib)))))
 
 hatis

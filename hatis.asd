@@ -9,12 +9,15 @@
 
  :pathname #P"src/"
 
- :defsystem-depends-on (:trivial-features
-                        :alexandria
-                        :wayflan
-                        :trivia
-                        :arrows
-                        :access
+ :defsystem-depends-on (:trivial-features ;; base
+                        :alexandria ;; base
+                        :trivia ;; matching
+                        :arrows ;; syntax
+                        :chanl ;; CSP multhithreading
+                        :access ;; nice way to access nested structs elements
+                        :wayflan ;; best lisp wayland client
                         :protocols)
 
- :components ((:file "hatis/core")))
+ :components ((:module "hatis"
+               :components ((:file "utils")
+                            (:file "core" :depends-on ("utils"))))))
