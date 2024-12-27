@@ -176,6 +176,25 @@ dispatch is used in [[id:518ab312-dd50-41e8-b922-55b419adbd38][wlroots examples]
 seems like ~dispatch~ is the way
 ** XKB character signature → utf-8 symbol
 [[https://stackoverflow.com/questions/8970098/how-to-map-a-x11-keysym-to-a-unicode-character][See]]
+** sbcl-gtk4-sourceview build fails
+sourceview might be used in UI
+#+begin_src scheme
+;; Build below fails with «Component "cl-gtk4.sourceview" not found»
+;; Althought there is such system + asd file
+;; TODO: figure out
+(use-modules
+ (gnu packages lisp-xyz)
+ ((gnu packages gtk) #:select (gtksourceview)))
+
+(define sbcl-gtk4+sourceview
+ (package
+  (inherit sbcl-cl-gtk4)
+  (name "sbcl-cl-gtk4+sourceview")
+  (arguments '(#:asd-systems '("cl-gtk4" "cl-gtk4.sourceview")))
+  (inputs (append
+           (package-inputs sbcl-cl-gtk4)
+           `(("gtksourceview" ,gtksourceview))))))
+#+end_src
 * TODOS
 ** TODO Security policy (maybe DBUS?) [far future, low priority]
 Ask @avp (@artyom-poptsov) once again for clarifications. Pairing?
