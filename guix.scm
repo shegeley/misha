@@ -99,14 +99,14 @@
   (version "0.0.1-alpha")
   (inputs
    (list
+    ;; sbcl-modf ;; todo: take a look
+    sbcl-wayflan/latest
+    hatis/protocols
+    sbcl-chanl
     sbcl-trivia
     sbcl-access
     sbcl-arrows
-    sbcl-alexandria))
-  (native-inputs
-   (list
-    sbcl-wayflan/latest
-    hatis/protocols))))
+    sbcl-alexandria))))
 
 (define-public hatis.ui
  (package
