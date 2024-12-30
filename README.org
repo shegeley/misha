@@ -85,12 +85,6 @@ there is even no "user" yet. btw "user" should also be defined in the context of
 - OS: Guix System
 Run the project with: ~make sway+mrepl~ or ~~make sway+tm/mrepl~~ to launch it with "windowed" sway or ~make mrepl~ to launch in on your's current wayland compositor.
 * Notes
-** On ~wl_seat~ and it's capabilities
-~(wl-seat-get-...)~ (touch/pointer/keyboard) can be called even when there is no relatable capability (when there is no touch devices, for example)
-
-it will cause "sneaky error": it will be written in a console, that there are no capability, but no exception will be thrown, so it's not possible to catch it with ~(with-exception-handler ...)~. and it will, in fact "return" ~wl-touch~ object. althought it will be "broken".
-
-workaround is to always ~(extract-capabilities ...)~ and only "do things" after getting the exact capabilities. also know: capabilities might change directly (disconnect the keyboard/mouse), so the should also be updated and refered each time. never assume constance.
 ** [[https://wayland.app/protocols/text-cursor-position][Weston Unstable text cursor position]]
 Might be the key to [[id:8fce6ad3-309c-4354-bffc-dab11f37c6cc][distingushing text-inputs]] (getting + saving text-input context). At least it "knows" it's surface.
 ** Context of input method protocol
