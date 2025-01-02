@@ -202,9 +202,9 @@ See: https://blog.cneufeld.ca/2014/01/the-less-familiar-parts-of-lisp-for-beginn
   (map 'list #'(lambda (a) (list a :type 'hash-table)) args)))
 #+end_src
 * TODOS
+** IN-PROGRESS Draft a simple GTK-based UI to show interactive "input-repl" (events in real-time)
 ** TODO Security policy (maybe DBUS?) [far future, low priority]
 Ask @avp (@artyom-poptsov) once again for clarifications. Pairing?
-** TODO Draft a simple GTK-based UI to show interactive "input-repl" (events in real-time)
 ** TODO Figure out testing [high priority]
 How do I test it from non-personal PC? Simulate wayland when being ssh-access only. Will be needed for automations like github actions or something.
 ---
@@ -327,3 +327,4 @@ Is it realiable to grab them globall (from the given wl_seat) and use during inp
 2. [[https://wayland-book.com/introduction.html][The Wayland Book]] (Drew DeVault)
 3. [[https://wayland.app/][Wayland.app]]
 4. [[https://github.com/mwette/guile-wl-play/tree/0cda7797044515376686cdf35c318640373cfc26/kbd-parse][guille-wl-play]] (@mwette)
+5. [[https://sr.ht/~shunter/wayflan/][Wayflan]]
