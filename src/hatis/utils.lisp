@@ -1,6 +1,8 @@
 (defpackage :xyz.hatis.utils
  (:use :cl)
- (:export :_->- :wrap :force-output! :format!))
+ (:export
+  :_->- :wrap :force-output!
+  :format! :interface-string->symbol))
 
 (in-package :xyz.hatis.utils)
 
@@ -13,3 +15,6 @@
 
 (defun format! (&rest args)
  (apply #'wrap #'force-output! #'format args))
+
+(defun interface-string->symbol (interface)
+ (read-from-string (_->- interface)))
