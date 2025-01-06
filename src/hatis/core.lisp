@@ -51,7 +51,7 @@
 
 (defun handle-interface-event*
  (interface event &key (channel *channel*))
- "Handle wayland's interface event accoding to the handle-interface-event method and send result to the channel"
+ "Handle wayland's interface event according to the handle-interface-event method and send result to the channel"
  (destructuring-bind (event-name &rest event-args) event
   (let ((r (apply (handle-interface-event interface event-name) event-args)))
    (send channel r))))
@@ -84,12 +84,12 @@
         (im   (state-ref 'zwp-input-method-v2))
         (seat (state-ref 'wl-seat))
         (im*  (if im im (zwp-input-method-manager-v2.get-input-method imm seat))))
-  (process-interface im*)))
+   im*))
 
 (defun run ()
  (with-open-display (display)
-  (process-interface display)
-  (get-input-method)
+  (process-interface display) ;; <- this will "catch" all the interfaces into *state* hashtable + put event-listeners on them
+  (process-interface (get-input-method)) ;; <- this will 'catch' via input-method-manager-v2.get-input-method. need to be evoked once *state* if fully filled
   (loop (wl-display-dispatch-event display))))
 
 ;; (pexec () (loop (format t "~a~%" (recv *channel*))))
