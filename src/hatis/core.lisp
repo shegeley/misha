@@ -52,7 +52,7 @@
 
 (defmethod handle-interface-event
  ((i zwlr-foreign-toplevel-manager-v1) (e (eql :toplevel)))
- (lambda (handle) (state-set 'foreign-toplevel-handle handle)))
+ (lambda (handle) (process-interface handle)))
 
 (defmethod handle-interface-event
  ((registry wl-registry) (e (eql :global)))
