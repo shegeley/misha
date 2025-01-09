@@ -29,6 +29,20 @@
 (setf (access:accesses *heroes* "Avengers" "Retired" "Tony Stark") "me") https://stackoverflow.com/a/56596316 |#
 (defun state-unset (key)   (remhash key *state*))
 
+(defun get-interface* (type)      (state-ref type))
+(defun set-interface* (interface) (state-set (type-of interface) interface))
+
+(defun interface-alive-p (type)
+ (not (eql 'wl-destroyed-proxy (type-of (get-interface* type)))))
+
+(defun set-interface (interface)
+ (let ((type (type-of interface)))
+  (if (interface-alive-p type) (set-interface* interface) nil)))
+
+(defun get-interface (type)
+ (let ((I (get-interface* type)))
+  (if (interface-alive-p type) I nil)))
+
 (defvar registry-global-interfaces-bind-list
  `(wl-seat
    zwp-input-method-manager-v2
@@ -75,16 +89,15 @@
  (interface)
  "This method is called BEFORE all the interfaces are 'collected' into *state* hashtable. So you can't rely on it's being filled on this method's first call"
  (progn
-  (state-set (type-of interface) interface)
+  (set-interface interface)
   (install-event-handlers! interface)
   (list 'processed interface)))
 
 (defun get-input-method ()
- (let* ((imm  (state-ref 'zwp-input-method-manager-v2))
-        (im   (state-ref 'zwp-input-method-v2))
-        (seat (state-ref 'wl-seat))
-        (im*  (if im im (zwp-input-method-manager-v2.get-input-method imm seat))))
-   im*))
+ (let* ((imm  (get-interface 'zwp-input-method-manager-v2))
+        (im   (get-interface 'zwp-input-method-v2))
+        (seat (get-interface 'wl-seat)))
+  (if im im (zwp-input-method-manager-v2.get-input-method imm seat))))
 
 (defun run ()
  (with-open-display (display)
