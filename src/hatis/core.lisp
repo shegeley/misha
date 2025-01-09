@@ -55,6 +55,20 @@
  (lambda (handle) (process-interface handle)))
 
 (defmethod handle-interface-event
+ ((i zwp-input-method-v2) (e (eql :activate)))
+ (lambda ()
+  (let ((grab (zwp-input-method-v2.grab-keyboard i)))
+   (process-interface grab))))
+
+(defmethod handle-interface-event
+ ((i zwp-input-method-v2) (e (eql :deactivate)))
+ (lambda ()
+  (let ((grab (get-interface 'zwp-input-method-keyboard-grab-v2)))
+   (when grab
+    (zwp-input-method-keyboard-grab-v2.release grab)
+    (list 'released 'zwp-input-method-keyboard-grab-v2)))))
+
+(defmethod handle-interface-event
  ((registry wl-registry) (e (eql :global)))
  (lambda (id interface version)
   (let ((sinterface (interface-string->symbol interface)))
