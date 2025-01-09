@@ -44,6 +44,7 @@
   (if (interface-alive-p type) I nil)))
 
 (defvar registry-global-interfaces-bind-list
+ ;; "List of 'initial' (:= coming from the registry) interfaces that's needed by hatis"
  `(wl-seat
    zwp-input-method-manager-v2
    zwlr-foreign-toplevel-manager-v1))
