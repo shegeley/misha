@@ -292,7 +292,6 @@ See: [[https://github.com/mwette/guile-wl-play/tree/0cda7797044515376686cdf35c31
 :PROPERTIES:
 :ID:       8fce6ad3-309c-4354-bffc-dab11f37c6cc
 :END:
-** TODO Figure out proper event loop/event flow & handling using guile fibers [very high priority] (with @abcdw help)
 ** TODO Also try [[https://wayland.app/protocols/xwayland-keyboard-grab-unstable-v1#zwp_xwayland_keyboard_grab_manager_v1:request:grab_keyboard][XWayland keyboard grabbing]] [very low priority]
 :PROPERTIES:
 :ID:       8793f30e-76d8-4443-a048-fc760da8918e
@@ -312,10 +311,6 @@ The protocol:
 Is popup surface something that just appears and dies right away or it's "saved" and can be compared on equality?
 ---
 Answer: no. Popup surface won't allow it.
-** DONE Figure out basic log (output) management                     :guile:
-Not to mess the arei/ares buffer I'm redirecting all the output to some sample file (for now it's just "./output.txt") and write all to that using ~open-port~ (in append-mode) + ~with-output-to-port~.
-
-It can be monitored with ~tail -f output.txt | nl~ (last one is ~number lines~, optional)
 * Questions
 ** Do I need to create sepate virtual keyboard when grabbing the input?
 For what? Kinda hotswap?
