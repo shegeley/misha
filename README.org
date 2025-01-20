@@ -203,6 +203,8 @@ See: https://blog.cneufeld.ca/2014/01/the-less-familiar-parts-of-lisp-for-beginn
 #+end_src
 * TODOS
 ** IN-PROGRESS Draft a simple GTK-based UI to show interactive "input-repl" (events in real-time)
+** IN-PROGRESS start/stop in common-lisp
+add start-stop mechanics in common lisp. best case scenario: evaling ~(start!)~ & ~(stop!)~ in repl.
 ** TODO Security policy (maybe DBUS?) [far future, low priority]
 Ask @avp (@artyom-poptsov) once again for clarifications. Pairing?
 ** TODO Figure out testing [high priority]
