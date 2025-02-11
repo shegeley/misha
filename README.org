@@ -85,6 +85,8 @@ there is even no "user" yet. btw "user" should also be defined in the context of
 - OS: Guix System
 Run the project with: ~make sway+mrepl~ or ~~make sway+tm/mrepl~~ to launch it with "windowed" sway or ~make mrepl~ to launch in on your's current wayland compositor.
 * Notes
+** ~(%proxy-table wl-display)~ from wayflan
+Already keeps track of the state: <id (uniquie integer), wayland-interface> and only keep 'alive' interface (no destroyed-proxies).
 ** [[https://wayland.app/protocols/text-cursor-position][Weston Unstable text cursor position]]
 Might be the key to [[id:8fce6ad3-309c-4354-bffc-dab11f37c6cc][distingushing text-inputs]] (getting + saving text-input context). At least it "knows" it's surface.
 ** Context of input method protocol
