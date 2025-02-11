@@ -18,30 +18,22 @@
 
 (in-package :xyz.hatis.core)
 
-(defvar *channel* (make-instance 'channel))
-(defvar *state*   (make-hash-table))
-
-(defun state-ref (key)     (gethash key *state*))
-(defun state-set (key val)
- (setf (gethash key *state*) val)
- (list 'state-set key val))
-#| In CL I can't just replace [1] with `(state-ref)'. setf won't recognize. it's ugly af. maybe: use `access' lib for it? But it's an overkill for 1 deep hash-table. Maybe for another one.
-(setf (access:accesses *heroes* "Avengers" "Retired" "Tony Stark") "me") https://stackoverflow.com/a/56596316 |#
-(defun state-unset (key)   (remhash key *state*))
-
-(defun get-interface* (type)      (state-ref type))
-(defun set-interface* (interface) (state-set (type-of interface) interface))
-
-(defun interface-alive-p (type)
- (not (eql 'wl-destroyed-proxy (type-of (get-interface* type)))))
-
-(defun set-interface (interface)
- (let ((type (type-of interface)))
-  (if (interface-alive-p type) (set-interface* interface) nil)))
+(defparameter *channel* (make-instance 'channel))
 
 (defun get-interface (type)
- (let ((I (get-interface* type)))
-  (if (interface-alive-p type) I nil)))
+  "keep in mind that there can be multiple interfaces of the same time in display's proxy-table. find-if only returns first"
+  (->>
+   'xyz.shunter.wayflan.client::%proxy-table
+   (slot-value *display*)
+   (a:hash-table-values)
+   (find-if (lambda (x) (eq type (type-of x))))))
+
+(defparameter key->code
+ `((Esc . 1)))
+
+(defun assoc-ref (alist k) (cdr (assoc k alist)))
+
+(defparameter *display* nil)
 
 (defvar registry-global-interfaces-bind-list
  ;; "List of 'initial' (:= coming from the registry) interfaces that's needed by hatis"
@@ -56,6 +48,27 @@
  (lambda (handle) (process-interface handle)))
 
 (defmethod handle-interface-event
+ ((i zwp-input-method-keyboard-grab-v2) (e (eql :keymap)))
+ (lambda (&rest args) ;; (serial time key state)
+  (cons :keymap args)))
+
+(defmethod handle-interface-event
+ ((i zwp-input-method-keyboard-grab-v2) (e (eql :key)))
+ (lambda (serial time keycode state)
+ (cond
+   ((= (assoc-ref key->code `Esc) keycode)
+    (let ((imkg (get-interface 'zwp-input-method-keyboard-grab-v2)))
+     (format t "Releasing keyboard grab ~a ~%" imkg)
+     (zwp-input-method-keyboard-grab-v2.release imkg)))
+  (t (list serial time keycode state)))))
+
+(defmethod handle-interface-event
+ ((i zwp-input-method-keyboard-grab-v2) (e (eql :modifiers)))
+ (lambda (&rest args)
+  ;; (serial time key state)
+  (cons :modifiers args)))
+
+(defmethod handle-interface-event
  ((i zwp-input-method-v2) (e (eql :activate)))
  (lambda ()
   (let ((grab (zwp-input-method-v2.grab-keyboard i)))
@@ -67,7 +80,14 @@
   (let ((grab (get-interface 'zwp-input-method-keyboard-grab-v2)))
    (when grab
     (zwp-input-method-keyboard-grab-v2.release grab)
-    (list 'released 'zwp-input-method-keyboard-grab-v2)))))
+    (list 'deactivated 'zwp-input-method-keyboard-grab-v2)))))
+
+(defmethod handle-interface-event
+    ((i zwp-input-method-v2) (e (eql :content-type)))
+  ;; EXAMPLE (CONTENT-TYPE (NONE) TERMINAL)
+  (lambda (_ type)
+    (cond ((eql type :terminal)
+           "do something given it's a terminal"))))
 
 (defmethod handle-interface-event
  ((registry wl-registry) (e (eql :global)))
@@ -83,7 +103,8 @@
  "Handle wayland's interface event according to the handle-interface-event method and send result to the channel"
  (destructuring-bind (event-name &rest event-args) event
   (let ((r (apply (handle-interface-event interface event-name) event-args)))
-   (send channel r))))
+   (send channel (cons 'wayland-interface-event event))
+   (send channel (cons 'handled-event-result r)))))
 
 (defun install-event-handlers! (interface)
  (push
@@ -94,31 +115,48 @@
  (wl-registry.bind registry id (interface-string->symbol interface) version))
 
 (defmethod process-interface
- ((display wl-display))
- (progn
-  (process-interface (wl-display.get-registry display))
-  (wl-display-roundtrip display)
-  (wl-display-roundtrip display)))
+ ((d wl-display))
+  (progn
+    (setq *display* d)
+    (process-interface (wl-display.get-registry *display*))
+    ;; double roundrtip needed to catch all the interfaces + toplevel manager&handle
+    (wl-display-roundtrip *display*)
+    (wl-display-roundtrip *display*)))
 
 (defmethod process-interface
  (interface)
  "This method is called BEFORE all the interfaces are 'collected' into *state* hashtable. So you can't rely on it's being filled on this method's first call"
  (progn
-  (set-interface interface)
   (install-event-handlers! interface)
   (list 'processed interface)))
 
 (defun get-input-method ()
- (let* ((imm  (get-interface 'zwp-input-method-manager-v2))
-        (im   (get-interface 'zwp-input-method-v2))
-        (seat (get-interface 'wl-seat)))
-  (if im im (zwp-input-method-manager-v2.get-input-method imm seat))))
+  (let* ((imm  (get-interface 'zwp-input-method-manager-v2))
+         (im   (get-interface 'zwp-input-method-v2))
+         (seat (get-interface 'wl-seat)))
+    (if im im (zwp-input-method-manager-v2.get-input-method imm seat))))
 
-(defun run ()
+(defun start! ()
+ (print "Starting hatis…") (terpri)
  (with-open-display (display)
-  (process-interface display) ;; <- this will "catch" all the interfaces into *state* hashtable + put event-listeners on them
-  (process-interface (get-input-method)) ;; <- this will 'catch' via input-method-manager-v2.get-input-method. need to be evoked once *state* if fully filled
-  (loop (wl-display-dispatch-event display))))
+   (pexec () (loop (format t "~a~%" (recv *channel*))))
+   (process-interface display)
+   (process-interface (get-input-method))
+   (loop
+     (if (not (eql 'wl-destroyed-proxy (type-of *display*)))
+         (wl-display-dispatch-event *display*)
+         (return t)))))
 
-;; (pexec () (loop (format t "~a~%" (recv *channel*))))
-;; (run)
+(defun stop! ()
+ (handler-case
+  (progn
+   (print "Stopping hatis…") (terpri)
+   (wl-display.sync *display*)
+   (wl-display-disconnect *display*))
+  (error (c)
+   (print "Coudn't stop hatis…") (terpri)
+   (format *error-output* "Caught error: ~a ~%" c)
+   nil)))
+
+;; (start!)
+;; (stop!)
